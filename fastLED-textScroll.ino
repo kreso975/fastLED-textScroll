@@ -1,4 +1,4 @@
-#include <FastLED.h>
+#include <FastLED.h> // version 3.7.8
 #include "Font6x8.h"
 
 #define LED_PIN 0
