@@ -23,7 +23,7 @@ int scrollPosition = 0;
 
 void setup()
 {    
-    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
+    FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
     FastLED.setMaxPowerInVoltsAndMilliamps(5, 700); // cap on 700mA
     FastLED.setBrightness(BRIGHTNESS);    
 }
@@ -32,6 +32,7 @@ void loop()
 {
     displayMessage(CRGB::Blue, message, 8); // Scroll message
     for (int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8_video(BRIGHTNESS); } // adjust brightness
+    //FastLED.setBrightness(BRIGHTNESS);
     // Show the LEDDs
     FastLED.show();
     FastLED.delay(10);
