@@ -24,7 +24,7 @@ int scrollPosition = 0;
 void setup()
 {    
     FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
-    FastLED.setMaxPowerInVoltsAndMilliamps(5, 700);
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, 700); // cap on 700mA
     FastLED.setBrightness(BRIGHTNESS);    
 }
 
