@@ -132,6 +132,29 @@
     <script>
         var entireFontData = [];
 
+        const asciiComments = [
+                "null", "start of heading", "start of text", "end of text", "end of transmission", "enquiry", "acknowledge", "bell",
+                "backspace", "horizontal tab", "line feed", "vertical tab", "form feed", "carriage return", "shift out", "shift in",
+                "data link escape", "device control 1", "device control 2", "device control 3", "device control 4", "negative acknowledge", "synchronous idle", "end of transmission block",
+                "cancel", "end of medium", "substitute", "escape", "file separator", "group separator", "record separator", "unit separator",
+                "space", "!", "\"", "#", "$", "%", "&", "'",
+                "(", ")", "*", "+", ",", "-", ".", "/",
+                "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                ":", ";", "<", "=", ">", "?", "@",
+                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+                "[", "\\", "]", "^", "_", "`",
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+                "{", "|", "}", "~", "delete",
+                "€", "undefined", "‚", "ƒ", "„", "…", "†", "‡", "ˆ", "‰", "Š", "‹", "Œ", "undefined", "Ž", "undefined",
+                "undefined", "‘", "’", "“", "”", "•", "–", "—", "˜", "™", "š", "›", "œ", "undefined", "ž", "Ÿ",
+                " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬", "­", "®", "¯",
+                "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
+                "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
+                "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
+                "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
+                "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
+            ];
+
         document.addEventListener('DOMContentLoaded', () => {
             const grid = document.getElementById('grid');
             for (let i = 0; i < 48; i++) {
@@ -157,13 +180,12 @@
                 entireFontData.forEach((font, index) => {
                     const option = document.createElement('option');
                     option.value = index;
-                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${String.fromCharCode(index)}`;
+                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${asciiComments[index]}`;
                     fontSelect.appendChild(option);
                 });
             };
             reader.readAsText(file);
         }
-
 
         function loadFont() {
             const fontSelect = document.getElementById('fontSelect');
@@ -191,7 +213,7 @@
                 entireFontData.forEach((font, index) => {
                     const option = document.createElement('option');
                     option.value = index;
-                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${String.fromCharCode(index)}`;
+                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${asciiComments[index]}`;
                     fontSelect.appendChild(option);
                 });
                 // Automatically load the first record into the editor grid
@@ -200,6 +222,7 @@
             };
             reader.readAsText(fileInput.files[0]);
         }
+
 
         function reloadOriginalFont() {
             const fontSelect = document.getElementById('fontSelect');
@@ -241,29 +264,6 @@
         }
 
         function exportToHex() {
-            const asciiComments = [
-                "null", "start of heading", "start of text", "end of text", "end of transmission", "enquiry", "acknowledge", "bell",
-                "backspace", "horizontal tab", "line feed", "vertical tab", "form feed", "carriage return", "shift out", "shift in",
-                "data link escape", "device control 1", "device control 2", "device control 3", "device control 4", "negative acknowledge", "synchronous idle", "end of transmission block",
-                "cancel", "end of medium", "substitute", "escape", "file separator", "group separator", "record separator", "unit separator",
-                "space", "!", "\"", "#", "$", "%", "&", "'",
-                "(", ")", "*", "+", ",", "-", ".", "/",
-                "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                ":", ";", "<", "=", ">", "?", "@",
-                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-                "[", "\\", "]", "^", "_", "`",
-                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
-                "{", "|", "}", "~", "delete",
-                "€", "undefined", "‚", "ƒ", "„", "…", "†", "‡", "ˆ", "‰", "Š", "‹", "Œ", "undefined", "Ž", "undefined",
-                "undefined", "‘", "’", "“", "”", "•", "–", "—", "˜", "™", "š", "›", "œ", "undefined", "ž", "Ÿ",
-                " ", "¡", "¢", "£", "¤", "¥", "¦", "§", "¨", "©", "ª", "«", "¬", "­", "®", "¯",
-                "°", "±", "²", "³", "´", "µ", "¶", "·", "¸", "¹", "º", "»", "¼", "½", "¾", "¿",
-                "À", "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
-                "Ð", "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "×", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
-                "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í", "î", "ï",
-                "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
-            ];
-
             let hexOutput = 'const uint8_t FontHeight=8;\nconst uint8_t FontWidth=6;\nconst static uint8_t PROGMEM Font[256][6]={\n';
             entireFontData.forEach((font, index) => {
                 let asciiComment = asciiComments[index] || 'null';
