@@ -5,4 +5,4 @@ ESP8266 S01 using library fastLED scrolling text
 
 **6x8 Font Editor**  
 
-![Settings](./html/Screenshot-Font-editor?raw=true "Font Editor") 
+![Settings](./html/Screenshot-Font-editor.png?raw=true "Font Editor") 
