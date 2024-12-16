@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="6x8 Font Editor - A tool to edit and export 6x8 font data.">
+        <meta name="keywords" content="arduino, esp8266, esp32, font editor, 6x8 font, font data, hex export, font editing tool">
+        <meta name="author" content="Kresimir Kokanovic @ https://github.com/kreso975">
+        <title>6x8 Font Editor</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                color: #333;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+            }
+            h1 {
+                margin-bottom: 20px;
+            }
+            .controls {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(6, 20px);
+                grid-template-rows: repeat(8, 20px);
+                gap: 2px;
+                margin-bottom: 20px;
+            }
+            .cell {
+                width: 20px;
+                height: 20px;
+                border: 1px solid #000;
+                background-color: #fff;
+                cursor: pointer;
+            }
+            .cell.on {
+                background-color: #000;
+            }
+            .output {
+                margin-bottom: 20px;
+            }
+            button {
+                padding: 10px 20px;
+                border: none;
+                background-color: #007bff;
+                color: #fff;
+                cursor: pointer;
+                border-radius: 5px;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+            button.warning {
+                background-color: #ffcc00;
+                color: #000;
+            }
+            button.warning:hover {
+                background-color: #e6b800;
+            }
+            input[type="file"] {
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background-color: #fff;
+                cursor: pointer;
+            }
+            input[type="text"],
+            select {
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            input[type="text"] {
+                width: 200px;
+            }
+            .hex-output-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .hex-output-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .hex-output {
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+                width: 100%;
+                text-align: center;
+            }
+        </style>
+    </head>
+    
+<body>
+    <h1>6x8 Font Editor</h1>
+    <div class="controls">
+        <input type="file" id="fileInput">
+        <button onclick="loadAllFonts()">Load Font</button>
+    </div>
+    <div class="controls">
+        <button onclick="reloadOriginalFont()">Reload Original Font</button>
+        <button onclick="saveFont()">Save Font</button>
+        <button onclick="exportFontToHex()">Export to Hex</button>
+    </div>
+    <div class="controls">
+        <select id="fontSelect" onchange="loadFont()"></select>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="controls">
+        <input type="text" id="hexInput" placeholder="Enter hex or int values" oninput="toggleUpdateButton()">
+        <button id="updateButton" onclick="updateGrid()" disabled>Update Grid</button>
+        <button class="warning" onclick="clearGrid()">Clear Grid</button>
+    </div>
+    <div class="hex-output-container">
+        <label for="hexOutput" class="hex-output-label">Hex Output:</label>
+        <input type="text" id="hexOutput" class="hex-output" readonly>
+    </div>
+
+    
+    <script>
+        var entireFontData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('grid');
+            for (let i = 0; i < 48; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', () => {
+                    cell.classList.toggle('on');
+                    calculateHexOutput();
+                });
+                grid.appendChild(cell);
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                entireFontData = JSON.parse(e.target.result);
+                const fontSelect = document.getElementById('fontSelect');
+                fontSelect.innerHTML = '';
+                entireFontData.forEach((font, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${String.fromCharCode(index)}`;
+                    fontSelect.appendChild(option);
+                });
+            };
+            reader.readAsText(file);
+        }
+
+
+        function loadFont() {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+
+            entireFontData[selectedFont].forEach((column, colIndex) => {
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (column & (1 << rowIndex)) {
+                        cells[rowIndex * 6 + colIndex].classList.add('on');
+                    }
+                }
+            });
+            calculateHexOutput();
+        }
+
+        function loadAllFonts() {
+            const fileInput = document.getElementById('fileInput');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                entireFontData = JSON.parse(e.target.result);
+                const fontSelect = document.getElementById('fontSelect');
+                fontSelect.innerHTML = '';
+                entireFontData.forEach((font, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `0x${index.toString(16).padStart(2, '0')} - ${String.fromCharCode(index)}`;
+                    fontSelect.appendChild(option);
+                });
+                // Automatically load the first record into the editor grid
+                fontSelect.selectedIndex = 0;
+                loadFont();
+            };
+            reader.readAsText(fileInput.files[0]);
+        }
+
+        function reloadOriginalFont() {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+
+            entireFontData[selectedFont].forEach((column, colIndex) => {
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (column & (1 << rowIndex)) {
+                        cells[rowIndex * 6 + colIndex].classList.add('on');
+                    }
+                }
+            });
+            calculateHexOutput();
+        }
+
+
+        function updateGrid() {
+            const hexInput = document.getElementById('hexInput').value;
+            const columns = hexInput.split(',').map(val => {
+                if (val.trim().startsWith('0x')) {
+                    return parseInt(val, 16);
+                } else {
+                    return parseInt(val, 10);
+                }
+            });
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+
+            columns.forEach((column, colIndex) => {
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (column & (1 << rowIndex)) {
+                        cells[rowIndex * 6 + colIndex].classList.add('on');
+                    }
+                }
+            });
+            calculateHexOutput();
+        }
+
+        function exportToHex() {
+            let hexOutput = 'const static uint8_t PROGMEM Font[256][6]={\n';
+            entireFontData.forEach((font, index) => {
+                hexOutput += '{' + font.map(val => '0x' + val.toString(16).padStart(2, '0')).join(',') + '},\t// 0x' + index.toString(16).padStart(2, '0') + ' - ' + String.fromCharCode(index) + '\n';
+            });
+            hexOutput += '};';
+            return hexOutput;
+        }
+
+
+        function exportFontToHex()
+        {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            let fontData = [];
+            for (let colIndex = 0; colIndex < 6; colIndex++) {
+                let columnValue = 0;
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (cells[rowIndex * 6 + colIndex].classList.contains('on')) {
+                        columnValue |= (1 << rowIndex);
+                    }
+                }
+                fontData.push(columnValue);
+            }
+            entireFontData[selectedFont] = fontData;
+
+            // Export the font data to hex format
+            const hexOutput = exportToHex();
+            const hexBlob = new Blob([hexOutput], { type: 'text/plain' });
+            const hexUrl = URL.createObjectURL(hexBlob);
+            const hexLink = document.createElement('a');
+            hexLink.href = hexUrl;
+            hexLink.download = 'font.h';
+            document.body.appendChild(hexLink);
+            hexLink.click();
+            document.body.removeChild(hexLink);
+            URL.revokeObjectURL(hexUrl);
+        }
+
+
+
+        function calculateHexOutput() {
+            const cells = document.querySelectorAll('.cell');
+            let hexOutput = [];
+            for (let colIndex = 0; colIndex < 6; colIndex++) {
+                let columnValue = 0;
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (cells[rowIndex * 6 + colIndex].classList.contains('on')) {
+                        columnValue |= (1 << rowIndex);
+                    }
+                }
+                hexOutput.push(columnValue.toString(16).padStart(2, '0'));
+            }
+            document.getElementById('hexOutput').value = hexOutput.join(',');
+        }
+
+        function saveFont() {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            let fontData = [];
+            for (let colIndex = 0; colIndex < 6; colIndex++) {
+                let columnValue = 0;
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (cells[rowIndex * 6 + colIndex].classList.contains('on')) {
+                        columnValue |= (1 << rowIndex);
+                    }
+                }
+                fontData.push(columnValue);
+            }
+            entireFontData[selectedFont] = fontData;
+
+            // Save the entire font data as JSON
+            const jsonBlob = new Blob([JSON.stringify(entireFontData)], { type: 'application/json' });
+            const jsonUrl = URL.createObjectURL(jsonBlob);
+            const jsonLink = document.createElement('a');
+            jsonLink.href = jsonUrl;
+            jsonLink.download = 'font.json';
+            document.body.appendChild(jsonLink);
+            jsonLink.click();
+            document.body.removeChild(jsonLink);
+            URL.revokeObjectURL(jsonUrl);
+        }
+
+
+        function clearGrid() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+            document.getElementById('hexOutput').value = '';
+        }
+
+    </script>
+</body>
+</html>

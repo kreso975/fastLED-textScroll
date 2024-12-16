@@ -7,7 +7,7 @@
 #define BRIGHTNESS 20
 
 // Params for width and height
-const uint8_t kMatrixWidth = 64;
+const uint8_t kMatrixWidth = 32;
 const uint8_t kMatrixHeight = 8;
 
 // Param for different pixel layouts
