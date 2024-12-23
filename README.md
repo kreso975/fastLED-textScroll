@@ -1,5 +1,5 @@
 # fastLED-textScroll  
-ESP8266 S01 using library fastLED scrolling text  
+ESP8266 S01 using library fastLED scrolling text. WS2812b matrix 8x32, 8x64.  
 
 [![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://paypal.me/kreso975)  
 
