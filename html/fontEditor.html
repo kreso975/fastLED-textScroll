@@ -42,6 +42,20 @@
             .cell.on {
                 background-color: #000;
             }
+            .container { 
+                display: flex;
+            }
+            .column {
+                margin-right: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end; /* Right-align inputs */
+            }
+            .button-column {
+                display: flex;
+                flex-direction: column;
+                margin-top: 20px; /* Add top margin */
+            }
             .output {
                 margin-bottom: 20px;
             }
@@ -87,6 +101,7 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                margin-top: 20px;
             }
             .hex-output-label {
                 font-weight: bold;
@@ -118,11 +133,20 @@
         <select id="fontSelect" onchange="loadFont()"></select>
     </div>
     <div class="grid" id="grid"></div>
-    <div class="controls">
-        <input type="text" id="hexInput" placeholder="Enter hex or int values" oninput="toggleUpdateButton()">
-        <button id="updateButton" onclick="updateGrid()" disabled>Update Grid</button>
-        <button class="warning" onclick="clearGrid()">Clear Grid</button>
+
+    <div class="container">
+        <div class="column">
+            Hex: <input type="text" id="hexInput" oninput="toggleUpdateButton()">
+            <br>
+            Decimal: <input type="text" id="decimalInput" oninput="toggleUpdateButton()">
+        </div>
+        <div class="button-column">
+            <button id="updateButton" onclick="updateGrid()" disabled>Update Grid</button>
+            <br />
+            <button id="clearButton" class="warning" onclick="clearGrid()">Clear Grid</button>
+        </div>
     </div>
+    
     <div class="hex-output-container">
         <label for="hexOutput" class="hex-output-label">Hex Output:</label>
         <input type="text" id="hexOutput" class="hex-output" readonly>
@@ -155,6 +179,9 @@
                 "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "÷", "ø", "ù", "ú", "û", "ü", "ý", "þ", "ÿ"
             ];
 
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+                
         document.addEventListener('DOMContentLoaded', () => {
             const grid = document.getElementById('grid');
             for (let i = 0; i < 48; i++) {
@@ -163,12 +190,11 @@
                 cell.addEventListener('click', () => {
                     cell.classList.toggle('on');
                     calculateHexOutput();
+                    updateFontData();
                 });
                 grid.appendChild(cell);
             }
         });
-
-        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
@@ -187,9 +213,44 @@
             reader.readAsText(file);
         }
 
+        function reloadOriginalFont() {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+
+            entireFontData[selectedFont].forEach((column, colIndex) => {
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (column & (1 << rowIndex)) {
+                        cells[rowIndex * 6 + colIndex].classList.add('on');
+                    }
+                }
+            });
+            calculateHexOutput();
+        }
+
+
+        function updateGrid() {
+            const hexInput = document.getElementById('hexInput').value;
+            const decimalInput = document.getElementById('decimalInput').value;
+            const columns = hexInput ? hexInput.split(',').map(val => parseInt(val.trim(), 16)) : decimalInput.split(',').map(val => parseInt(val.trim(), 10));
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => cell.classList.remove('on'));
+
+            columns.forEach((column, colIndex) => {
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (column & (1 << rowIndex)) {
+                        cells[rowIndex * columns.length + colIndex].classList.add('on');
+                    }
+                }
+            });
+            calculateHexOutput();
+        }
+
         function loadFont() {
             const fontSelect = document.getElementById('fontSelect');
             const selectedFont = fontSelect.value;
+            console.log(`Loading font: ${selectedFont}`);
             const cells = document.querySelectorAll('.cell');
             cells.forEach(cell => cell.classList.remove('on'));
 
@@ -223,59 +284,7 @@
             reader.readAsText(fileInput.files[0]);
         }
 
-
-        function reloadOriginalFont() {
-            const fontSelect = document.getElementById('fontSelect');
-            const selectedFont = fontSelect.value;
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => cell.classList.remove('on'));
-
-            entireFontData[selectedFont].forEach((column, colIndex) => {
-                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
-                    if (column & (1 << rowIndex)) {
-                        cells[rowIndex * 6 + colIndex].classList.add('on');
-                    }
-                }
-            });
-            calculateHexOutput();
-        }
-
-
-        function updateGrid() {
-            const hexInput = document.getElementById('hexInput').value;
-            const columns = hexInput.split(',').map(val => {
-                if (val.trim().startsWith('0x')) {
-                    return parseInt(val, 16);
-                } else {
-                    return parseInt(val, 10);
-                }
-            });
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => cell.classList.remove('on'));
-
-            columns.forEach((column, colIndex) => {
-                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
-                    if (column & (1 << rowIndex)) {
-                        cells[rowIndex * 6 + colIndex].classList.add('on');
-                    }
-                }
-            });
-            calculateHexOutput();
-        }
-
-        function exportToHex() {
-            let hexOutput = 'const uint8_t FontHeight=8;\nconst uint8_t FontWidth=6;\nconst static uint8_t PROGMEM Font[256][6]={\n';
-            entireFontData.forEach((font, index) => {
-                let asciiComment = asciiComments[index] || 'null';
-                hexOutput += '{' + font.map(val => '0x' + val.toString(16).padStart(2, '0')).join(',') + '},\t// 0x' + index.toString(16).padStart(2, '0') + ' - ' + asciiComment + '\n';
-            });
-            hexOutput += '};';
-            return hexOutput;
-        }
-
-
-        function exportFontToHex()
-        {
+        function updateFontData() {
             const fontSelect = document.getElementById('fontSelect');
             const selectedFont = fontSelect.value;
             const cells = document.querySelectorAll('.cell');
@@ -290,8 +299,52 @@
                 fontData.push(columnValue);
             }
             entireFontData[selectedFont] = fontData;
+            console.log(`Updated font: ${selectedFont}`, fontData);
+        }
 
-            // Export the font data to hex format
+        function handleFontChange() {
+            console.log('Saving current font data before changing selection');
+            updateFontData();
+            console.log('Loading new font data after changing selection');
+            loadFont();
+        }
+
+        // Ensure local buffer is updated when changing font selection
+        document.getElementById('fontSelect').addEventListener('change', handleFontChange);
+
+
+        function exportToHex() {
+            let hexOutput = 'const uint8_t FontHeight=8;\nconst uint8_t FontWidth=6;\nconst static uint8_t PROGMEM Font[256][6]={\n';
+            entireFontData.forEach((font, index) => {
+                let asciiComment = asciiComments[index] || 'null';
+                hexOutput += '{' + font.map(val => '0x' + val.toString(16).padStart(2, '0')).join(',') + '},\t// 0x' + index.toString(16).padStart(2, '0') + ' - ' + asciiComment + '\n';
+            });
+            hexOutput += '};';
+            return hexOutput;
+        }
+
+        var entireFontData = [];
+
+        function saveCurrentFontData() {
+            const fontSelect = document.getElementById('fontSelect');
+            const selectedFont = fontSelect.value;
+            const cells = document.querySelectorAll('.cell');
+            let fontData = [];
+            for (let colIndex = 0; colIndex < 6; colIndex++) {
+                let columnValue = 0;
+                for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+                    if (cells[rowIndex * 6 + colIndex].classList.contains('on')) {
+                        columnValue |= (1 << rowIndex);
+                    }
+                }
+                fontData.push(columnValue);
+            }
+            entireFontData[selectedFont] = fontData;
+            console.log(`Saved font: ${selectedFont}`, fontData);
+        }
+
+        function exportFontToHex() {
+            saveCurrentFontData();
             const hexOutput = exportToHex();
             const hexBlob = new Blob([hexOutput], { type: 'text/plain' });
             const hexUrl = URL.createObjectURL(hexBlob);
@@ -304,6 +357,19 @@
             URL.revokeObjectURL(hexUrl);
         }
 
+
+        function toggleUpdateButton() {
+            const hexInput = document.getElementById('hexInput').value.trim();
+            const decimalInput = document.getElementById('decimalInput').value.trim();
+            const updateButton = document.getElementById('updateButton');
+
+            // Enable or disable the update button based on input presence
+            if (hexInput !== "" || decimalInput !== "") {
+                updateButton.disabled = false;
+            } else {
+                updateButton.disabled = true;
+            }
+        }
 
 
         function calculateHexOutput() {
