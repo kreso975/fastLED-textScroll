@@ -18,7 +18,7 @@ const bool    kMatrixVertical = true;
 CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
 CRGB* const leds( leds_plus_safety_pixel + 1);
 
-const char* message = "č Č ć Ć ž Ž š Š đ Đ  Ovo je Samo Čudnovati školjkaš i test 148 AND NOW SOMETHING COMPLETLY DIFFERENTS";
+const char* message = "Historia est Magistra VITAE";
 int scrollPosition = 0;
 
 void setup()
