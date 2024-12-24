@@ -11,5 +11,5 @@ ESP8266 S01 using library fastLED scrolling text. WS2812b matrix 8x32, 8x64.
 
 **6x8 Font Editor**  
 
-![Settings](./html/Screenshot-Font-editor.png?raw=true "Font Editor") 
+![Settings](./html/Screenshot-Font-editor.png?raw=true "Font Bitmap Editor") 
 

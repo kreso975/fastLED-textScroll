@@ -38,7 +38,6 @@ void loop()
     // Show the LEDDs
     FastLED.show();
     FastLED.delay(10);
-    
 }
 
 String convertToSingleByte(String input) {
